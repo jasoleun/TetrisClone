@@ -9,6 +9,7 @@ namespace TetrisClone
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
+        private Playfield playfield;
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -18,7 +19,11 @@ namespace TetrisClone
 
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            _graphics.PreferredBackBufferWidth = 176;
+            _graphics.PreferredBackBufferHeight = 656;
+            _graphics.ApplyChanges();
+
+            playfield = new Playfield();
 
             base.Initialize();
         }
@@ -27,7 +32,7 @@ namespace TetrisClone
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
+            playfield.Load(this.Content);
         }
 
         protected override void Update(GameTime gameTime)
@@ -35,7 +40,7 @@ namespace TetrisClone
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
+            playfield.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -44,7 +49,7 @@ namespace TetrisClone
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
+            playfield.Draw(_spriteBatch);
 
             base.Draw(gameTime);
         }
