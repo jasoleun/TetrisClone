@@ -1,0 +1,6 @@
+﻿namespace TetrisClone
+{
+    class Tetromino
+    {
+    }
+}
