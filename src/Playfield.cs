@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -18,6 +17,8 @@ namespace TetrisClone
         int fallRate = 1000;
         double controlCooldown = 0;
         bool landed = false;
+
+        int linescleared = 0;
 
         private SpriteFont font;
 
@@ -39,54 +40,32 @@ namespace TetrisClone
 
         public Playfield() { }
 
-        public void Load(ContentManager Content)
+        public void clearLine()
         {
-            blockTexture = Content.Load<Texture2D>("blockTexture");
-            playfieldTexture = Content.Load<Texture2D>("playfieldTexture");
-
-            font = Content.Load<SpriteFont>("Arial");
-
-            currentTetramino = new Tetramino(1);
+            int linecount = 0;
+            for (int col = 0; col < array.GetLength(1); col++)
+            {
+                linecount = 0;
+                for (int row = 0; row < array.GetLength(0); row++)
+                {
+                    if (array[row, col] != 0)
+                    {
+                        linecount++;
+                    }
+                    if (linecount == 10)
+                    {
+                        for (int k = 0; k < 10; k++)
+                        {
+                            array.SetValue(0, k, col);
+                        }
+                        linescleared++;
+                    }
+                }
+            }
         }
 
-        public void Update(GameTime gameTime)
+        public void wallCollision()
         {
-            fallRate = 1000;
-            fallTimer += gameTime.ElapsedGameTime.TotalMilliseconds;
-            controlCooldown += gameTime.ElapsedGameTime.TotalMilliseconds;
-            KeyboardState newState = Keyboard.GetState();
-
-            if (oldState.IsKeyUp(Keys.W) && newState.IsKeyDown(Keys.W))
-            {
-                currentTetramino.Rotate("left");
-            }
-            else if (oldState.IsKeyUp(Keys.S) && newState.IsKeyDown(Keys.S))
-            {
-                currentTetramino.Rotate("right");
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.A) && controlCooldown >= 150)
-            {
-                currentTetramino.position.X -= 1;
-                controlCooldown = 0;
-            }
-            else if (Keyboard.GetState().IsKeyDown(Keys.D) && controlCooldown >= 150)
-            {
-                currentTetramino.position.X += 1;
-                controlCooldown = 0;
-            }
-
-            if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
-            {
-                fallRate = 100;
-            }
-
-            oldState = newState;
-            if (fallTimer >= fallRate)
-            {
-                currentTetramino.position.Y += 1;
-                fallTimer = 0;
-            }
-
             for (int col = 0; col < currentTetramino.BlockShape.GetLength(1); col++)
             {
                 for (int row = 0; row < currentTetramino.BlockShape.GetLength(0); row++)
@@ -108,17 +87,92 @@ namespace TetrisClone
                     }
                 }
             }
+        }
 
+        public void blockCollision(string direction)
+        {
             for (int row = 0; row < currentTetramino.BlockShape.GetLength(0); row++)
             {
                 for (int col = 0; col < currentTetramino.BlockShape.GetLength(1); col++)
                 {
                     if (currentTetramino.BlockShape[row, col] != 0 && array[(int)currentTetramino.position.X + col, (int)currentTetramino.position.Y + row] != 0)
                     {
-                        currentTetramino.position.Y -= 1;
-                        landed = true;
+                        if (direction == "left")
+                        {
+                            currentTetramino.position.X += 1;
+                        }
+                        if (direction == "right")
+                        {
+                            currentTetramino.position.X -= 1;
+                        }
+                        if (direction == "down")
+                        {
+                            currentTetramino.position.Y -= 1;
+                            landed = true;
+                        }
                     }
                 }
+            }
+        }
+
+        public void Load(ContentManager Content)
+        {
+            blockTexture = Content.Load<Texture2D>("blockTexture");
+            playfieldTexture = Content.Load<Texture2D>("playfieldTexture");
+
+            font = Content.Load<SpriteFont>("Arial");
+
+            currentTetramino = new Tetramino(new Random().Next(0, 7));
+        }
+
+        public void Update(GameTime gameTime)
+        {
+            fallRate = 1000;
+            fallTimer += gameTime.ElapsedGameTime.TotalMilliseconds;
+            controlCooldown += gameTime.ElapsedGameTime.TotalMilliseconds;
+            KeyboardState newState = Keyboard.GetState();
+            linescleared = 0;
+            clearLine();
+
+            if (oldState.IsKeyUp(Keys.W) && newState.IsKeyDown(Keys.W))
+            {
+                currentTetramino.Rotate("left");
+                wallCollision();
+                blockCollision("left");
+            }
+            else if (oldState.IsKeyUp(Keys.S) && newState.IsKeyDown(Keys.S))
+            {
+                currentTetramino.Rotate("right");
+                wallCollision();
+                blockCollision("right");
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.A) && controlCooldown >= 150)
+            {
+                currentTetramino.position.X -= 1;
+                wallCollision();
+                blockCollision("left");
+                controlCooldown = 0;
+            }
+            else if (Keyboard.GetState().IsKeyDown(Keys.D) && controlCooldown >= 150)
+            {
+                currentTetramino.position.X += 1;
+                wallCollision();
+                blockCollision("right");
+                controlCooldown = 0;
+            }
+
+            if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
+            {
+                fallRate = 25;
+            }
+
+            oldState = newState;
+            if (fallTimer >= fallRate)
+            {
+                currentTetramino.position.Y += 1;
+                wallCollision();
+                blockCollision("down");
+                fallTimer = 0;
             }
 
             if (landed)
@@ -134,6 +188,7 @@ namespace TetrisClone
                     }
                 }
                 landed = false;
+                currentTetramino.ChangeTetramino(new Random().Next(0, 7));
                 currentTetramino.position.Y = 0;
             }
         }
