@@ -19,7 +19,7 @@ namespace TetrisClone
 
         protected override void Initialize()
         {
-            _graphics.PreferredBackBufferWidth = 176;
+            _graphics.PreferredBackBufferWidth = 1280;
             _graphics.PreferredBackBufferHeight = 656;
             _graphics.ApplyChanges();
 
